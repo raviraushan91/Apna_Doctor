@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medical AI Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Optional Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-main: #f3f4f6;
+            --bg-sidebar: #0f172a;
+            --bg-topbar: #ffffff;
+            --bg-input: #ffffff;
+            --bg-user: #dcf8c6;
+            --bg-bot: #ffffff;
+            --border-soft: #e5e7eb;
+            --border-strong: #0ea5e9;
+            --text-main: #111827;
+            --text-subtle: #6b7280;
+            --text-invert: #f9fafb;
+            --accent: #0ea5e9;
+            --accent-soft: #dbeafe;
+            --shadow-soft: 0 10px 25px rgba(15,23,42,0.12);
+            --suggestion-bg: #e0f2fe;
+        }
+
+        body.theme-dark {
+            --bg-main: #020617;
+            --bg-sidebar: #020617;
+            --bg-topbar: #020617;
+            --bg-input: #020617;
+            --bg-user: #16a34a;
+            --bg-bot: #0b1120;
+            --border-soft: #1f2937;
+            --border-strong: #38bdf8;
+            --text-main: #e5e7eb;
+            --text-subtle: #9ca3af;
+            --text-invert: #f9fafb;
+            --accent: #38bdf8;
+            --accent-soft: #0b1120;
+            --shadow-soft: 0 10px 30px rgba(15,23,42,0.6);
+            --suggestion-bg: #1d4ed8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 1200px;
+            margin: 16px;
+            border-radius: 24px;
+            overflow: hidden;
+            background: var(--bg-main);
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            border: 1px solid var(--border-soft);
+        }
+
+        /* SIDEBAR (S2) */
+        .sidebar {
+            width: 220px;
+            background: var(--bg-sidebar);
+            color: var(--text-invert);
+            display: flex;
+            flex-direction: column;
+            padding: 18px 14px;
+            gap: 22px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: #022c22;
+        }
+
+        .sidebar-title h1 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .sidebar-title p {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #e5e7eb;
+        }
+
+        .nav-item span.icon {
+            width: 22px;
+            text-align: center;
+        }
+
+        .nav-item.active {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148,163,184,0.6);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .sidebar-footer b {
+            color: #e5e7eb;
+        }
+
+        /* MAIN PANEL */
+        .main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-main);
+        }
+
+        /* TOPBAR */
+        .topbar {
+            background: var(--bg-topbar);
+            border-bottom: 1px solid var(--border-soft);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-title {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar-title h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .topbar-title p {
+            font-size: 11px;
+            color: var(--text-subtle);
+        }
+
+        .topbar-spacer {
+            flex: 1;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* iOS style theme switch */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-subtle);
+        }
+
+        .toggle-label {
+            font-size: 11px;
+        }
+
+        .toggle-switch {
+            width: 40px;
+            height: 22px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            border: 1px solid #d1d5db;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+        }
+
+        body.theme-dark .toggle-switch {
+            background: #1f2937;
+            border-color: #4b5563;
+        }
+
+        .toggle-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            background: #ffffff;
+            position: absolute;
+            left: 3px;
+            transition: transform 0.18s ease;
+        }
+
+        body.theme-dark .toggle-thumb {
+            transform: translateX(16px);
+        }
+
+        /* Voice toggle */
+        .voice-toggle-btn {
+            border: 1px solid var(--border-soft);
+            border-radius: 999px;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: transparent;
+            font-size: 16px;
+            color: var(--text-subtle);
+        }
+
+        .voice-toggle-btn.active {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Clear button */
+        .clear-form button {
+            border: 1px solid #ef4444;
+            background: transparent;
+            color: #ef4444;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .clear-form button:hover {
+            background: rgba(248, 113, 113, 0.1);
+        }
+
+        /* CHAT AREA */
+        .chat-container {
+            flex: 1;
+            padding: 16px 18px;
+            overflow-y: auto;
+            background: var(--bg-main);
+        }
+
+        .chat-inner {
+            max-width: 780px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        body.theme-dark .avatar {
+            background: #020617;
+            color: #e5e7eb;
+        }
+
+        .avatar.bot {
+            background: var(--accent);
+            color: #eff6ff;
+        }
+
+        .bubble {
+            padding: 8px 11px;
+            border-radius: 16px;
+            font-size: 14px;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        .bubble.user {
+            background: var(--bg-user);
+            border-bottom-right-radius: 4px;
+        }
+
+        .bubble.bot {
+            background: var(--bg-bot);
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-soft);
+        }
+
+        .bubble small {
+            font-size: 11px;
+            color: var(--text-subtle);
+            display: block;
+            margin-top: 4px;
+        }
+
+        .welcome-card {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        .welcome-card b {
+            color: var(--accent);
+        }
+
+        .welcome-card code {
+            background: var(--accent-soft);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .bot-section-title {
+            margin-top: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .bot-list {
+            margin-left: 1rem;
+            margin-top: 2px;
+            font-size: 13px;
+        }
+
+        .bot-list li {
+            margin-bottom: 2px;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--text-subtle);
+            opacity: 0.4;
+            animation: typingBlink 1s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes typingBlink {
+            0% { opacity: 0.4; transform: translateY(0); }
+            40% { opacity: 1; transform: translateY(-2px); }
+            100% { opacity: 0.4; transform: translateY(0); }
+        }
+
+        /* INPUT AREA */
+        .input-area {
+            border-top: 1px solid var(--border-soft);
+            background: var(--bg-input);
+            padding: 10px 14px;
+        }
+
+        .input-inner {
+            max-width: 780px;
+            margin: 0 auto;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .textarea-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        textarea[name="symptoms"] {
+            width: 100%;
+            min-height: 44px;
+            max-height: 100px;
+            resize: none;
+            padding: 9px 12px;
+            border-radius: 16px;
+            border: 1px solid var(--border-soft);
+            outline: none;
+            font-size: 14px;
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        textarea[name="symptoms"]::placeholder {
+            color: var(--text-subtle);
+        }
+
+        .suggestions-panel {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 50px;
+            background: var(--suggestion-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(15,23,42,0.25);
+            max-height: 180px;
+            overflow-y: auto;
+            display: none;
+            padding: 4px 0;
+            z-index: 20;
+        }
+
+        .suggestions-header {
+            font-size: 11px;
+            padding: 3px 10px;
+            opacity: 0.8;
+        }
+
+        .suggestion-item {
+            padding: 6px 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(15,23,42,0.08);
+        }
+
+        .mic-btn {
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: transparent;
+            font-size: 17px;
+            color: var(--text-subtle);
+        }
+
+        .mic-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 10px rgba(14,165,233,0.5);
+        }
+
+        button[type="submit"] {
+            border-radius: 999px;
+            border: none;
+            background: var(--accent);
+            color: #eff6ff;
+            padding: 9px 15px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            filter: brightness(1.03);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .app-shell {
+                flex-direction: column;
+            }
+            .sidebar {
+                flex-direction: row;
+                align-items: center;
+                width: 100%;
+                padding: 10px 12px;
+            }
+            .sidebar-header {
+                flex: 1;
+            }
+            .sidebar-nav {
+                display: none;
+            }
+            .sidebar-footer {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .app-shell {
+                margin: 10px;
+                border-radius: 16px;
+            }
+            .bubble {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="theme-light">
+<div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-badge">Rx</div>
+            <div class="sidebar-title">
+                <h1>MedAssist AI</h1>
+                <p>Smart symptom checker</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item active">
+                <span class="icon">🩺</span>
+                <span>Diagnosis</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon">💬</span>
+                <span>Chat</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon">📄</span>
+                <span>Reports</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon">⚙️</span>
+                <span>Settings</span>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div>Built by <b>Ravi</b></div>
+            <div>ML-powered clinical assistant (beta)</div>
+        </div>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <div class="main-panel">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-title">
+                <h2>Medical AI Assistant</h2>
+                <p>Describe symptoms, get a probable condition & care plan.</p>
+            </div>
+
+            <div class="topbar-spacer"></div>
+
+            <div class="topbar-actions">
+                <div class="toggle-wrapper">
+                    <span class="toggle-label">Light</span>
+                    <div class="toggle-switch" id="themeToggle">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                    <span class="toggle-label">Dark</span>
+                </div>
+
+                <button type="button" id="voiceToggle" class="voice-toggle-btn" title="Toggle voice">
+                    🔊
+                </button>
+
+                <form method="POST" action="/clear" class="clear-form">
+                    <button type="submit">Clear</button>
+                </form>
+            </div>
+        </header>
+
+        <!-- CHAT AREA -->
+        <main class="chat-container" id="chat">
+            <div class="chat-inner">
+
+                {% if not chat_history %}
+                <div class="message-row">
+                    <div class="avatar bot">🩺</div>
+                    <div class="bubble bot">
+                        <div class="welcome-card">
+                            <b>Welcome!</b> I’m your Medical AI Assistant.<br><br>
+                            Tell me your symptoms in one line, separated by commas.<br>
+                            For example: <code>headache, nausea, mild_fever</code>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% for msg in chat_history %}
+                    {% if msg.type == 'user' %}
+                        <div class="message-row user">
+                            <div class="bubble user">
+                                {{ msg.text }}
+                                <small>You</small>
+                            </div>
+                            <div class="avatar user">👤</div>
+                        </div>
+                    {% else %}
+                        <div class="message-row">
+                            <div class="avatar bot">🩺</div>
+                            <div class="bubble bot">
+                                {% if loop.last %}
+                                    <div class="typing-indicator" id="typing">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                    <div id="bot-content" style="display:none;">
+                                {% endif %}
+
+                                <div id="{% if loop.last %}latest-bot-text{% endif %}">
+                                    <div class="bot-section-title">Predicted disease</div>
+                                    <p><b>{{ msg.predicted_disease }}</b></p>
+
+                                    {% if msg.description %}
+                                        <div class="bot-section-title">Description</div>
+                                        <p>{{ msg.description }}</p>
+                                    {% endif %}
+
+                                    {% if msg.precautions %}
+                                        <div class="bot-section-title">Precautions</div>
+                                        <ul class="bot-list">
+                                            {% for p in msg.precautions %}
+                                                {% if p %}<li>{{ p }}</li>{% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if msg.medications %}
+                                        <div class="bot-section-title">Medications</div>
+                                        <ul class="bot-list">
+                                            {% for m in msg.medications %}
+                                                {% if m %}<li>{{ m }}</li>{% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if msg.diets %}
+                                        <div class="bot-section-title">Diet suggestions</div>
+                                        <ul class="bot-list">
+                                            {% for d in msg.diets %}
+                                                {% if d %}<li>{{ d }}</li>{% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if msg.workouts %}
+                                        <div class="bot-section-title">Recommended workout</div>
+                                        <ul class="bot-list">
+                                            {% for w in msg.workouts %}
+                                                {% if w %}<li>{{ w }}</li>{% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if msg.symptoms %}
+                                        <div class="bot-section-title">You mentioned</div>
+                                        <p>{{ msg.symptoms|join(", ") }}</p>
+                                    {% endif %}
+
+                                    <small>⚠️ Not a final diagnosis. Please consult a doctor.</small>
+                                </div>
+
+                                {% if loop.last %}
+                                    </div> <!-- bot-content -->
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </main>
+
+        <!-- INPUT AREA -->
+        <form method="POST" class="input-area">
+            <div class="input-inner">
+                <div class="textarea-wrapper">
+                    <textarea
+                        name="symptoms"
+                        placeholder="itching, skin_rash, chills..."
+                    >{{ last_symptoms_text }}</textarea>
+
+                    <div class="suggestions-panel" id="suggestions">
+                        <div class="suggestions-header">Matching symptoms</div>
+                        <div id="suggestions-list"></div>
+                    </div>
+                </div>
+
+                <button type="button" class="mic-btn" id="micBtn" title="Speak symptoms">
+                    🎤
+                </button>
+
+                <button type="submit">Send</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const chat = document.getElementById("chat");
+    const textarea = document.querySelector('textarea[name="symptoms"]');
+    const suggestionsPanel = document.getElementById("suggestions");
+    const suggestionsList = document.getElementById("suggestions-list");
+    const themeToggle = document.getElementById("themeToggle");
+    const voiceToggle = document.getElementById("voiceToggle");
+    const micBtn = document.getElementById("micBtn");
+
+    const ALL_SYMPTOMS = {{ symptom_names|tojson|safe }};
+
+    let voiceEnabled = true;
+    let recognition = null;
+    let recognizing = false;
+
+    // Scroll to bottom
+    if (chat) {
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    // Theme toggle
+    function setTheme(theme) {
+        if (theme === "dark") {
+            document.body.classList.add("theme-dark");
+        } else {
+            document.body.classList.remove("theme-dark");
+        }
+    }
+
+    let currentTheme = "light";
+    themeToggle.addEventListener("click", () => {
+        currentTheme = currentTheme === "light" ? "dark" : "light";
+        setTheme(currentTheme);
+    });
+
+    // Voice toggle (TTS)
+    voiceToggle.addEventListener("click", () => {
+        voiceEnabled = !voiceEnabled;
+        if (voiceEnabled) {
+            voiceToggle.classList.add("active");
+            voiceToggle.textContent = "🔊";
+        } else {
+            voiceToggle.classList.remove("active");
+            voiceToggle.textContent = "🔇";
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+        }
+    });
+
+    function speakLatestBot() {
+        if (!voiceEnabled) return;
+        if (!("speechSynthesis" in window)) return;
+
+        const el = document.getElementById("latest-bot-text");
+        if (!el) return;
+
+        const text = el.innerText || el.textContent || "";
+        if (!text.trim()) return;
+
+        const utter = new SpeechSynthesisUtterance();
+        utter.text = text.length > 500 ? text.slice(0, 500) : text;
+        utter.lang = "en-US";
+        utter.rate = 1;
+        utter.pitch = 1;
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+    }
+
+    // Typing effect → then show content + speak
+    window.addEventListener("load", () => {
+        const typing = document.getElementById("typing");
+        const content = document.getElementById("bot-content");
+
+        if (typing && content) {
+            setTimeout(() => {
+                typing.style.display = "none";
+                content.style.display = "block";
+                if (chat) chat.scrollTop = chat.scrollHeight;
+                speakLatestBot();
+            }, 900);
+        }
+    });
+
+    // Auto suggestions
+    function updateSuggestions() {
+        if (!textarea) return;
+        const value = textarea.value;
+        const parts = value.split(",");
+        const currentRaw = parts[parts.length - 1] || "";
+        const current = currentRaw.trim().toLowerCase();
+
+        if (current.length < 2) {
+            suggestionsPanel.style.display = "none";
+            suggestionsList.innerHTML = "";
+            return;
+        }
+
+        const matches = ALL_SYMPTOMS.filter(sym =>
+            sym.toLowerCase().includes(current)
+        ).slice(0, 8);
+
+        if (matches.length === 0) {
+            suggestionsPanel.style.display = "none";
+            suggestionsList.innerHTML = "";
+            return;
+        }
+
+        suggestionsList.innerHTML = "";
+        matches.forEach(sym => {
+            const item = document.createElement("div");
+            item.className = "suggestion-item";
+            item.textContent = sym;
+            item.addEventListener("click", () => applySuggestion(sym));
+            suggestionsList.appendChild(item);
+        });
+
+        suggestionsPanel.style.display = "block";
+    }
+
+    function applySuggestion(sym) {
+        if (!textarea) return;
+        const value = textarea.value;
+        const parts = value.split(",");
+        parts[parts.length - 1] = " " + sym;
+        textarea.value = parts.join(",").replace(/^,\s*/, "");
+        suggestionsPanel.style.display = "none";
+        textarea.focus();
+    }
+
+    if (textarea) {
+        textarea.addEventListener("input", updateSuggestions);
+    }
+
+    document.addEventListener("click", (e) => {
+        if (!suggestionsPanel.contains(e.target) && e.target !== textarea) {
+            suggestionsPanel.style.display = "none";
+        }
+    });
+
+    // Speech to text
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SR();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+            recognizing = true;
+            micBtn.classList.add("active");
+        };
+        recognition.onend = () => {
+            recognizing = false;
+            micBtn.classList.remove("active");
+        };
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            let val = textarea.value.trim();
+            if (val && !val.endsWith(",")) {
+                val += ", ";
+            }
+            const clean = transcript.replace(/[,]/g, " ").toLowerCase().replace(/\s+/g, "_");
+            textarea.value = val + clean;
+            updateSuggestions();
+        };
+    } else {
+        micBtn.style.opacity = 0.5;
+        micBtn.title = "Speech recognition not supported";
+    }
+
+    micBtn.addEventListener("click", () => {
+        if (!recognition) return;
+        if (!recognizing) recognition.start();
+        else recognition.stop();
+    });
+</script>
+</body>
+</html>
